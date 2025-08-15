@@ -1,0 +1,63 @@
+---
+title: "us_tilapia_imports"
+output: html_document
+date: "2025-08-15"
+---
+
+read in packages and data
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+
+us_tilapia_imports <- read_csv(here::here("data", "us_tilapia_imports.csv"))
+```
+
+explore data
+```{r}
+summary(us_tilapia_imports)
+names(us_tilapia_imports)
+dim(us_tilapia_imports)
+skimr::skim(us_tilapia_imports)
+```
+
+clean data
+```{r}
+# pivot the data frame
+us_tilapia_imports <- pivot_longer(data = us_tilapia_imports, 
+                                   cols = !c(country), 
+                                   names_to = "year",
+                                   values_to = "imports") 
+# change year column from character to numeric
+us_tilapia_imports$year <- as.numeric(as.character(us_tilapia_imports$year))
+# double check class
+class(us_tilapia_imports$year)
+
+# summarise total import per year
+yearly_tilapia_tot <- us_tilapia_imports %>% 
+  group_by(year) %>% 
+  summarize(imports = sum(imports, na.rm = TRUE))
+
+# plot it
+ggplot(data = yearly_tilapia_tot, aes(x = year, y = imports)) + 
+  geom_line() +
+  labs(x = "Year",
+       y = "Total US Tilapia imports (thousands of pounds)")
+
+ggsave(here::here("figs", "tilapia_imports_tot.png"))
+
+# subset for only Ecuador, honduras and costa rica
+yearly_tilapia_subset <- us_tilapia_imports %>%
+  filter(country %in% c("Ecuador", "Honduras", "Costa Rica")) 
+
+# plot it
+ggplot(data = yearly_tilapia_subset, aes(x = year, y = imports, color = country)) + 
+  geom_line() +
+  facet_wrap(~country) +
+  labs(title = "Total US Tilapia Import by Country",
+       x = "year", 
+       y = "Total US Tilapia imports (thousands of pounds)")
+
+ggsave(here::here("figs", "tot_tilapia_import_country.png"))
+```
+

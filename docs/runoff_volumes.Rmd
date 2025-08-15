@@ -1,0 +1,37 @@
+---
+title: "runoff_volumes"
+output: html_document
+date: "2025-08-15"
+editor_options: 
+  chunk_output_type: console
+---
+
+load packages
+```{r}
+library(tidyverse)
+library(here)
+```
+
+source function for runoff estimates
+```{r}
+source(here::here("src", "storm_runoff.R"))
+# create impervious fraction sequence
+fraction_seq <- seq(from = 0.6, to = 0.8, by = 0.01)
+
+# calculate runoff predictions with runoff function
+runoff_prediction <- predict_runoff(seq_along(fraction_seq), 182)
+
+# knit both into a data frame
+runoff_volumes <- data.frame(impervious_fractions = fraction_seq, 
+                             runoff_volume = runoff_prediction)
+# create ggplot graph 
+ggplot(data = runoff_volumes, aes(x = impervious_fractions, y = runoff_volume)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Stormwater Runoff Predictions",
+       x = "Impervious Fractoins",
+       y = "Volume of Stormwater Runoff (cubic feet)")
+
+# save the plot as a png
+ggsave(here::here("figs", "runoff_plot.png"))
+```
